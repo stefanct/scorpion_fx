@@ -1,6 +1,9 @@
 // $fn=50;
 // $fn=200;
 
+// is_left = 1;
+// is_high_fill = 1;
+
 // mud guard
 mud_d = 60;
 mud_straight = 35;
@@ -135,6 +138,16 @@ module tie_channels (h=tie_h, w=tie_w, gap_percent=200) {
   }
 }
 
+module holder_beam_stump () {
+  translate(holder_beam_translation())
+    cylinder(d=beam_d, h=mud_d/16, center=true);
+}
+
+module holder_beam () {
+  translate(holder_beam_translation())
+    cylinder(d=beam_d, h=mud_d, center=true);
+}
+
 module holder () {
   difference () {
     union() {
@@ -152,18 +165,7 @@ module holder () {
   }
 }
 
-module holder_beam_stump () {
-  translate(holder_beam_translation())
-    cylinder(d=beam_d, h=mud_d/16, center=true);
-}
-
-module holder_beam () {
-  translate(holder_beam_translation())
-    cylinder(d=beam_d, h=mud_d, center=true);
-}
-
 module bike () {
-// mirror([1,0,0])
   union() {
     rotate([0,0,-strut_rotation]) {
       color("dimgrey") strut();
@@ -187,12 +189,29 @@ module high_infill () {
   high_infill_screws(off=2*holder_wall-strut_thick);
 }
 
-%bike();
-// difference() {
-  // holder();
-  // bike();
-// }
-#intersection() {
-  holder();
-  high_infill();
+module draw () {
+  if (!is_undef(is_left) && is_left != 0) {
+    mirror([1,0,0])
+    children();
+  } else {
+    children();
+  }
 }
+
+module model () {
+  %bike();
+
+  if (!is_undef(is_high_fill) && is_high_fill != 0) {
+    intersection() {
+      holder();
+      high_infill();
+    }
+  } else {
+    difference() {
+      holder();
+      bike();
+    }
+  }
+}
+
+draw() model();
