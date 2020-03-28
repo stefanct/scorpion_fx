@@ -1,2 +1,7 @@
 *.png
 *.stl
+mud_back*
+beam*
+launch*
+!*.scad
+launch.scad
