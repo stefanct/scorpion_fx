@@ -22,7 +22,7 @@ tie_gap=15;
 
 
 include <common.scad>;
-function mud_screw_off()=2*holder_wall-mud_strut_thick;
+function mud_screw_off_y()=2*holder_wall-mud_strut_thick;
 
 module holder_arc () {
   translate([15,0,15]) {
@@ -108,7 +108,7 @@ module high_infill_screws (off=0) {
     rotate([90,mud_strut_rotation,0]) {
       union() {
         cylinder(h=2*holder_wall, d=mud_strut_hole_d*4);
-        translate([-mud_strut_hole_dist/sqrt(2), -mud_strut_hole_dist/sqrt(2),0])
+        translate([-mud_strut_back_hole_dist/sqrt(2), -mud_strut_back_hole_dist/sqrt(2),0])
           cylinder(h=2*holder_wall, d=mud_strut_hole_d*4);
       }
     }
