@@ -9,6 +9,8 @@ module high_infill () {}
 
 ////////////////////////////////////////////////////////////////////////
 
+include <utils.scad>;
+
 alpha=0.2;
 
 // tires
@@ -33,6 +35,8 @@ mud_strut_screw_len=10;
 mud_strut_h_max=28;
 mud_strut_corner_angle=45;
 mud_strut_rotation=5;
+mud_strut_screw_r = sqrt(mud_axle_z*mud_axle_z+mud_axle_x*mud_axle_x); // Radial distance from origin screw to axle
+
 
 mud_strut_front_off_x=285; // Distance on x from top back screw to aft front screw
 mud_strut_front_off_z=100; // Likewise on z

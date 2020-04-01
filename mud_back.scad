@@ -1,3 +1,4 @@
+// $fn=20;
 // $fn=50;
 // $fn=200;
 
@@ -5,15 +6,6 @@
 // is_left = 1;
 // is_high_infill = 1;
 
-// holder
-holder_wall = 4;
-holder_arc_width = 14;
-function holder_arc_angle() = asin(holder_arc_width/mud_axle_r);
-holder_rect_width = 33;
-function holder_rect_angle() = asin(holder_rect_width/mud_axle_r);
-holder_angle = 29.75;
-
-beam_d = 22;
 
 tie_w_center=8;
 tie_w=4;
@@ -24,49 +16,76 @@ tie_gap=15;
 include <common.scad>;
 function mud_screw_off_y()=2*holder_wall-mud_strut_thick;
 
+// Holder common
+holder_wall = 4;
+
+// Holder beam
+holder_beam_d = 20;
+holder_beam_inwards_off = 2*holder_wall*1;
+holder_beam_h = mud_d+holder_beam_inwards_off*1;
+
+// Holder arc
+holder_arc_width = 14;
+holder_arc_off_x=mud_axle_x;
+holder_arc_off_z=mud_axle_z;
+holder_arc_angle_quirk=0.5;
+function holder_arc_angle() = atan(holder_arc_off_z/holder_arc_off_x)+holder_arc_angle_quirk;
+
+w = tan(holder_arc_angle_quirk)*mud_strut_screw_r*1;
+x = holder_arc_width/2*1;
+y = cos(holder_arc_angle()-45)*mud_strut_back_hole_dist;
+holder_rect_width = 2*w + 2*x + y;
+
+module holder_rotation(orbit) {
+  rotate_about_pt(holder_arc_angle(),[0,1,0],[mud_axle_x,0,-mud_axle_z]) // Rotate to final location
+    translate([-orbit, 0, 0]) // Move to correct "orbit"
+      translate([mud_axle_x,0,-mud_axle_z]) // Move to axle
+        children();
+}
+
 module holder_arc () {
-  translate([15,0,15]) {
-    translate([mud_axle_x,0,-mud_axle_z]) {
-      rotate([90,-holder_angle,180]) {
-        rotate_extrude(angle = holder_arc_angle(), convexity = 10) {
-          translate([mud_axle_r-mud_d/2+holder_wall, -mud_d/2, 0]) {
-            union() {
-              // Prevent bleeding towards the axle
-              intersection() {
-                circle(d=mud_d+2*holder_wall);
-                translate([holder_wall,2*holder_wall,0])
-                  square([mud_d+1*holder_wall, mud_d+2*holder_wall],center=true);
-              }
-            }
-          }
-        }
-      }
+  holder_rotation(mud_axle_r-mud_d/2)
+    intersection() { // Prevent bleeding on the outer side
+      translate([0, -mud_d/2+holder_arc_width/2,0])
+        cube([mud_d+holder_arc_width, mud_d+holder_arc_width,holder_arc_width],true);
+
+      translate([0, -mud_d/2, -holder_arc_width/2]) // Move arc to correct y location and z-center on origin
+        rotate([0,0,90,]) // Fix coordinate system
+            rotate_extrude(angle = 180, convexity = 10) // Create 180° arc
+              translate([mud_d/2, holder_arc_width/2, 0]) // Move half-circle to arc's "orbit"
+                union() {
+                  intersection() { // Create half-circle
+                    translate([holder_arc_width/2,0,0])
+                      square([holder_arc_width, holder_arc_width],center=true);
+                    circle(d=holder_arc_width);
+                  }
+                }
     }
-  }
 }
 
 module holder_bracket () {
-  translate([-25,0,-10]) {
-    rotate([0,holder_angle,0]) {
-      cube([mud_straight-10,2*holder_wall,30]);
-    }
-  }
+  holder_rotation(mud_strut_screw_r)
+    translate([mud_strut_hole_d*2,0,0])
+      translate([0,0,holder_arc_width/2]) // Offset to match arcs front facing border later
+        translate([-(mud_straight-10),0,-holder_rect_width]) // Move corner to origin
+          cube([mud_straight-10,2*holder_wall,holder_rect_width]);
 }
 
 module tie_channel (h=tie_h, w=tie_w, off_h=0) {
   translate([0, +w/2-off_h, 0]) // Center
-  holder_beam_translation()
-  rotate([0,0,270])
-  translate([0, -3, 0]) // Nudge into the beam
-  rotate_extrude(angle = 180, convexity = 2) 
-  translate([beam_d/2, 0, 0]) // Move to "orbit"
-  square([h, w]);
+    holder_beam_translation()
+      rotate([0,-holder_arc_angle(),0])
+        translate([-holder_beam_d/7, 0, 0]) // Nudge into the beam
+          rotate([180,90,90]) // Fix coordinate system
+            rotate_extrude(angle = 180, convexity = 2) 
+              translate([holder_beam_d/2, 0, 0]) // Move to "orbit"
+                square([h, w]);
 }
 
 module holder_beam_translation() {
-  translate([-mud_d+10,-mud_d/2+2*holder_wall,22])
-  rotate([90,0,0])
-    children();
+  holder_rotation(mud_axle_r+holder_beam_d/2+holder_wall)
+    translate([0, -holder_beam_h/2+holder_beam_inwards_off, 0]) // Move to correct y location
+      children();
 }
 
 module tie_channels (h=tie_h, w=tie_w, gap_percent=200) {
@@ -76,14 +95,10 @@ module tie_channels (h=tie_h, w=tie_w, gap_percent=200) {
   }
 }
 
-module holder_beam_stump () {
+module holder_beam (h) {
   holder_beam_translation()
-    cylinder(d=beam_d, h=mud_d/16, center=true);
-}
-
-module holder_beam () {
-  holder_beam_translation()
-    cylinder(d=beam_d, h=mud_d, center=true);
+    rotate([90,0,0]) // Fix coordinate system
+      cylinder(d=holder_beam_d, h=h, center=true);
 }
 
 module holder () {
@@ -95,9 +110,9 @@ module holder () {
       }
       hull() {
         holder_arc();
-        holder_beam_stump();
+        holder_beam(holder_beam_h/16);
       }
-      holder_beam();
+      holder_beam(holder_beam_h);
     }
     tie_channels();
   }
