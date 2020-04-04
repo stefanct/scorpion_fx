@@ -11,6 +11,7 @@ module high_infill () {}
 ////////////////////////////////////////////////////////////////////////
 
 include <utils.scad>;
+include <bezier.scad>;
 
 alpha=0.2;
 
@@ -34,10 +35,10 @@ mud_strut_corner_front_r=5; // The further most corner seems to be different to 
 mud_strut_back_corner_dist=20.5;
 mud_strut_front_corner_dist=22;
 mud_strut_hole_side_dist=10;
-mud_strut_hole_side_dist_back_upper=8.5; // The upper screw of the back brackets seems to be special in this regard
 mud_strut_back_hole_dist=15;
 mud_strut_hole_back_angle=40;
 
+mud_strut_bezier_upper_off_x=182; // Distance on x from top back screw to central bezier control point of upper border
 mud_strut_front_off_x=234; // Distance on x from top back screw to aft front screw
 mud_strut_front_off_z=110; // Likewise on z
 mud_strut_front_hole_dist=15;
@@ -94,33 +95,39 @@ module beams () {
   }
 }
 
+// Upper edge of the strut is a bezier curve
+mud_strut_upper_edge_p0 = [-mud_strut_front_off_x -tan(90-mud_strut_front_back_angle)*(mud_strut_hole_side_dist-mud_strut_corner_r) +cos(90-mud_strut_front_back_angle)*mud_strut_corner_r,
+      +mud_strut_front_off_z +(mud_strut_hole_side_dist-mud_strut_corner_r) +sin(90-mud_strut_front_back_angle)*mud_strut_corner_r]; // Back side of back screw of front bracket
+// Exact location of p1 is unsure...
+// It is certainly not the intersection between the front edge and the bottom edge
+// The one below uses the intersection between the front edge and the horizontal line through the origin screw (upper screw of back bracket)
+mud_strut_upper_edge_p1 = [
+  -mud_strut_bezier_upper_off_x,
+  0
+];
+mud_strut_upper_edge_p2 = [+cos(-mud_strut_hole_back_angle)*(mud_strut_hole_side_dist-mud_strut_corner_r),
+      -sin(-mud_strut_hole_back_angle)*(mud_strut_hole_side_dist-mud_strut_corner_r) + mud_strut_corner_r]; // Front side of upper screw of back bracket
+
 module mud_strut () {
   translate([0, -1, 0]) { // Make the strut intersect with the wing to prevent errors where the wing bends already
     difference() {
       rotate([90,0,180])
       union() {
         linear_extrude(height = mud_strut_thick+1) {
-          difference(){
-            // Base skeleton of the strut
-            polygon([
-              // x axis                                                                                                                                                                   z axis
-              [+sin(+50)*(mud_strut_hole_side_dist-mud_strut_corner_r),                                                                                                                   mud_strut_hole_side_dist_back_upper], // Front side of upper screw of back bracket
-              [+sin(+50)*mud_strut_hole_side_dist,                                                                                                                                        +cos(+50)*mud_strut_hole_side_dist], // Back side of upper screw of back bracket
-              [+sin(90-mud_strut_hole_back_angle)*mud_strut_hole_side_dist +sin(+mud_strut_hole_back_angle)*mud_strut_back_corner_dist,                                                   +cos(90-mud_strut_hole_back_angle)*mud_strut_hole_side_dist -cos(+mud_strut_hole_back_angle)*mud_strut_back_corner_dist], // Upper side of lower screw of back bracket
-              [+sin(mud_strut_hole_back_angle)*(mud_strut_back_hole_dist+mud_strut_hole_side_dist),                                                                                       -cos(mud_strut_hole_back_angle)*(mud_strut_back_hole_dist+mud_strut_hole_side_dist)], // Lower side of lower screw of back bracket
-              [+sin(+45)*mud_strut_back_corner_dist +0 +sin(-(90-mud_strut_bottom_angle))*mud_strut_bottom_len,                                                                           -cos(+45)*mud_strut_back_corner_dist -mud_strut_corner_r +cos(-(90-mud_strut_bottom_angle))*mud_strut_bottom_len], // Axle corner
-              [-mud_strut_front_off_x -mud_strut_front_corner_dist -tan(90-mud_strut_front_back_angle)*mud_strut_corner_front_r -sin(mud_strut_front_front_angle)*mud_strut_corner_front_r, +mud_strut_front_off_z +mud_strut_hole_side_dist -mud_strut_corner_front_r -cos(mud_strut_front_front_angle)*mud_strut_corner_front_r], // Lower side of front screw of front bracket
-              [-mud_strut_front_off_x -tan(90-mud_strut_front_back_angle)*(mud_strut_hole_side_dist-mud_strut_corner_r) -mud_strut_front_corner_dist,                                     +mud_strut_front_off_z +mud_strut_hole_side_dist], // Upper side of front screw of front bracket
-              [-mud_strut_front_off_x -tan(90-mud_strut_front_back_angle)*(mud_strut_hole_side_dist-mud_strut_corner_r),                                                                  +mud_strut_front_off_z +mud_strut_hole_side_dist], // Upper side of back screw of front bracket
-              [-mud_strut_front_off_x -tan(90-mud_strut_front_back_angle)*(mud_strut_hole_side_dist-mud_strut_corner_r) +cos(90-mud_strut_front_back_angle)*mud_strut_corner_r,           +mud_strut_front_off_z +(mud_strut_hole_side_dist-mud_strut_corner_r) +sin(90-mud_strut_front_back_angle)*mud_strut_corner_r], // Back side of back screw of front bracket
-              // [-20, mud_strut_hole_side_dist_back_upper], // Test point
-            ]);
-            // Approximate upper curved edge by subtracting a big circle
-            mud_strut_roundness_d=590;
-            translate([-sin(+50)*(mud_strut_hole_side_dist-mud_strut_corner_r),
-                       mud_strut_roundness_d/2+mud_strut_hole_side_dist_back_upper, 0])
-              circle(d=mud_strut_roundness_d);
-          }
+          // Skeleton of the strut
+          polygon(concat([
+            // x axis                                                                                                                                                                   z axis
+            [+sin(+50)*mud_strut_hole_side_dist,                                                                                                                                        +cos(+50)*mud_strut_hole_side_dist], // Back side of upper screw of back bracket
+            [+sin(90-mud_strut_hole_back_angle)*mud_strut_hole_side_dist +sin(+mud_strut_hole_back_angle)*mud_strut_back_corner_dist,                                                   +cos(90-mud_strut_hole_back_angle)*mud_strut_hole_side_dist -cos(+mud_strut_hole_back_angle)*mud_strut_back_corner_dist], // Upper side of lower screw of back bracket
+            [+sin(mud_strut_hole_back_angle)*(mud_strut_back_hole_dist+mud_strut_hole_side_dist),                                                                                       -cos(mud_strut_hole_back_angle)*(mud_strut_back_hole_dist+mud_strut_hole_side_dist)], // Lower side of lower screw of back bracket
+            [+sin(+45)*mud_strut_back_corner_dist +0 +sin(-(90-mud_strut_bottom_angle))*mud_strut_bottom_len,                                                                           -cos(+45)*mud_strut_back_corner_dist -mud_strut_corner_r +cos(-(90-mud_strut_bottom_angle))*mud_strut_bottom_len], // Axle corner
+            [-mud_strut_front_off_x -mud_strut_front_corner_dist -tan(90-mud_strut_front_back_angle)*mud_strut_corner_front_r -sin(mud_strut_front_front_angle)*mud_strut_corner_front_r, +mud_strut_front_off_z +mud_strut_hole_side_dist -mud_strut_corner_front_r -cos(mud_strut_front_front_angle)*mud_strut_corner_front_r], // Lower side of front screw of front bracket
+            [-mud_strut_front_off_x -tan(90-mud_strut_front_back_angle)*(mud_strut_hole_side_dist-mud_strut_corner_r) -mud_strut_front_corner_dist,                                     +mud_strut_front_off_z +mud_strut_hole_side_dist], // Upper side of front screw of front bracket
+            [-mud_strut_front_off_x -tan(90-mud_strut_front_back_angle)*(mud_strut_hole_side_dist-mud_strut_corner_r),                                                                  +mud_strut_front_off_z +mud_strut_hole_side_dist], // Upper side of back screw of front bracket
+            // [-20, 8.5], // Test point
+            ],
+            bezier(mud_strut_upper_edge_p0,mud_strut_upper_edge_p1,mud_strut_upper_edge_p2)
+          ));
         }
 
         // Corners are built by the cylinders below [x, z, y]
