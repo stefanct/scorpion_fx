@@ -6,6 +6,9 @@ mud_strut_extra_thick=0; // This allows the strut to intersect with the wing to 
 module translate_bike() {
   children();
 }
+module translate_result() {
+  children();
+}
 module norm_infill () {}
 module high_infill () {}
 
@@ -28,7 +31,7 @@ mud_axle_x = 195;
 mud_axle_z = 150;
 
 // mud strut
-mud_strut_rotation=0; // 3.6; // Rotation around y
+mud_strut_rotation=2.5; // Rotation around y
 mud_strut_thick=5;
 mud_strut_hole_d=5.5;
 mud_strut_corner_r=6;

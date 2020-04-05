@@ -1,6 +1,6 @@
 FN?=200
 
-MUD_TARGETS := mud_back-right.stl mud_back-left.stl
+MUD_TARGETS := mud_back-right.stl mud_back-left.stl mud_front-right.stl mud_front-left.stl
 
 TARGETS = $(MUD_TARGETS) bike.stl beam.stl
 TARGETS := $(foreach t,$(TARGETS),$(patsubst %.stl,%-norm_infill.stl,$(t)) $(patsubst %.stl,%-high_infill.stl,$(t)))
