@@ -109,31 +109,25 @@ module holder () {
 }
 
 module high_infill_screws (off=0) {
-  translate([0,2*holder_wall+off,0]) {
-    rotate([90,mud_strut_rotation,0]) {
-      union() {
-        cylinder(h=2*holder_wall, d=mud_strut_hole_d*4);
-        translate([-mud_strut_back_hole_dist/sqrt(2), -mud_strut_back_hole_dist/sqrt(2),0])
-          cylinder(h=2*holder_wall, d=mud_strut_hole_d*4);
-      }
-    }
-  }
+  mud_strut_holes(d=4*mud_strut_hole_d, h_add=mud_screw_off_y());
 }
 
 
 
 module norm_infill () {
-    difference() {
-  translate_result()
+  difference() {
+    translate_result()
       holder();
-      bike();
-    }
+    bike();
+  }
 }
 
 module high_infill () {
-  translate_result()
-    intersection() {
-      holder();
-      high_infill_screws();
+  intersection() {
+    norm_infill();
+    translate_result() {
+      rotate([0, mud_strut_rotation, 0])
+        high_infill_screws();
     }
+  }
 }

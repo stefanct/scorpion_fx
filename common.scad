@@ -1,5 +1,7 @@
+// The origin of bike() is centered on the top screw of the aft part of the mud guard strut on the touching point of the strut and the mud guard wing
+
 // overridable global functions/variables
-function mud_screw_off_y()=0;
+function mud_screw_off_y()=0; // Additional offset of the mud screws towards the center
 fill_screw_holes=1; // Without this there is a 0.25mm gap between the screws and respective holes in this model
 mud_strut_extra_thick=0; // This allows the strut to intersect with the wing to prevent errors where the wing is already bending
 
@@ -13,6 +15,9 @@ module norm_infill () {}
 module high_infill () {}
 
 ////////////////////////////////////////////////////////////////////////
+if (is_undef($fn)) {
+  $fn=0;
+}
 
 include <utils.scad>;
 include <bezier.scad>;
@@ -111,6 +116,27 @@ mud_strut_upper_edge_p1 = [
 mud_strut_upper_edge_p2 = [+cos(-mud_strut_hole_back_angle)*(mud_strut_hole_side_dist-mud_strut_corner_r),
       -sin(-mud_strut_hole_back_angle)*(mud_strut_hole_side_dist-mud_strut_corner_r) + mud_strut_corner_r]; // Front side of upper screw of back bracket
 
+module mud_strut_holes (d=mud_strut_hole_d, h_add=0) {
+  h=mud_strut_thick+mud_strut_extra_thick+h_add;
+  // Back bracket: upper screw
+  translate([0, h-mud_strut_extra_thick, 0])
+    rotate([90,0,0])
+      cylinder(h=h, d=d);
+  // Back bracket: bottom screw
+  translate([-sin(+mud_strut_hole_back_angle)*mud_strut_back_hole_dist, h-mud_strut_extra_thick, -cos(+mud_strut_hole_back_angle)*mud_strut_back_hole_dist])
+    rotate([90,0,0])
+      cylinder(h=h, d=d);
+  // Front bracket: back screw
+  translate([mud_strut_front_off_x, h-mud_strut_extra_thick, mud_strut_front_off_z])
+    rotate([90,0,0])
+      cylinder(h=h, d=d);
+  // Front bracket: front screw
+  translate([mud_strut_front_off_x+mud_strut_front_hole_dist, h-mud_strut_extra_thick, mud_strut_front_off_z])
+    rotate([90,0,0])
+      cylinder(h=h, d=d);
+}
+
+// The code below tries to mimic the former by rotating -mud_strut_rotation_edge °
 module mud_strut () {
   translate([0, -mud_strut_extra_thick, 0]) { // Make the strut intersect with the wing to prevent errors where the wing is already bending
     difference() {
@@ -152,36 +178,26 @@ module mud_strut () {
           cylinder(r=mud_strut_corner_r, h=mud_strut_thick+mud_strut_extra_thick);
       }
 
-      // Remove screw holes [x, y, z]
-      // Back bracket: upper screw
-      translate([0, mud_strut_thick+mud_strut_extra_thick, 0])
-        rotate([90,0,0])
-          cylinder(h=mud_strut_thick+mud_strut_extra_thick, d=mud_strut_hole_d);
-      // Back bracket: bottom screw
-      translate([-sin(+mud_strut_hole_back_angle)*mud_strut_back_hole_dist, mud_strut_thick+mud_strut_extra_thick, -cos(+mud_strut_hole_back_angle)*mud_strut_back_hole_dist])
-        rotate([90,0,0])
-          cylinder(h=mud_strut_thick+mud_strut_extra_thick, d=mud_strut_hole_d);
-      // Front bracket: back screw
-      translate([mud_strut_front_off_x, mud_strut_thick+mud_strut_extra_thick, mud_strut_front_off_z])
-        rotate([90,0,0])
-          cylinder(h=mud_strut_thick+mud_strut_extra_thick, d=mud_strut_hole_d);
-      // Front bracket: front screw
-      translate([mud_strut_front_off_x+mud_strut_front_hole_dist, mud_strut_thick+mud_strut_extra_thick, mud_strut_front_off_z])
-        rotate([90,0,0])
-          cylinder(h=mud_strut_thick+mud_strut_extra_thick, d=mud_strut_hole_d);
+      // Remove screw holes
+      mud_strut_holes();
     }
   }
 }
 
-module mud_screw (h=mud_screw_shaft_len, d_hole=mud_screw_shaft_d, d_head=mud_screw_head_d, off_x=0, off_y=0, off_z=0) {
-  translate([off_x, h-mud_strut_thick+mud_strut_extra_thick-mud_screw_head_h+off_y, off_z]) {
-    rotate([90,0,180])
+module mud_screw (off_x=0, off_y=0, off_z=0) {
+  h=mud_screw_shaft_len;
+  d_hole=mud_screw_shaft_d;
+  d_head=mud_screw_head_d;
+  translate([off_x, +mud_strut_thick+mud_screw_head_h+off_y, off_z]) // Head
+    rotate([90,0,0])
       cylinder(h=mud_screw_head_h, d=d_head); // actually rounded heads but this is good enough
+
+  translate([off_x, +mud_strut_thick+off_y, off_z]) { // Shaft
     rotate([90,0,0])
       cylinder(h=h+off_y, d=d_hole);
   }
   if (fill_screw_holes==1) {
-    translate([off_x, mud_strut_thick, off_z]) {
+    translate([off_x, mud_strut_thick, off_z]) { // Hole
       rotate([90,0,0])
         cylinder(h=mud_strut_thick+mud_strut_extra_thick, d=mud_strut_hole_d);
     }
@@ -203,7 +219,7 @@ module mud_screws_back (off_y=0) {
   mud_screw(off_x=-cos(50)*mud_strut_back_hole_dist, off_y=off_y, off_z=-sin(50)*mud_strut_back_hole_dist);
 }
 
-module mud_screws (off_y=0) {
+module mud_screws (off_y=mud_screw_off_y()) {
   mud_screws_back(off_y=off_y);
   mud_screws_front(off_y=off_y);
 }
@@ -232,9 +248,9 @@ module wheel () {
 }
 
 module mud_guard () {
-  rotate([0,mud_strut_rotation,0]) {
+  rotate([0, mud_strut_rotation, 0]) {
     color("dimgrey", alpha=alpha) mud_strut();
-    color("silver", alpha=alpha) mud_screws(off_y=mud_screw_off_y());
+    color("silver", alpha=alpha) mud_screws();
   }
   color("grey", alpha=alpha) mud_guard_wing();
 }
