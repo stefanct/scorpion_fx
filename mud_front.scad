@@ -5,6 +5,8 @@
 // is_left = 1;
 // is_high_infill = 1;
 
+outer_is_base=1;
+
 include <common.scad>;
 
 holder_arc_angle_quirk=1;
@@ -17,10 +19,21 @@ include <mud_common.scad>;
 function holder_bracket_off_r()=5;
 function is_holder_front_facing()=1;
 
+module translate_result_base() {
+  if (outer_is_base) {
+    translate([0, 0, holder_beam_h])
+      rotate([+90,0,holder_arc_angle()])
+        children();
+  } else {
+    rotate([-90,0,holder_arc_angle()])
+      strut_rotation(1)
+        children();
+  }
+}
+
 module translate_result() {
-  rotate([-90,0,holder_arc_angle()])
-    strut_rotation(1)
-      translate([-mud_strut_front_off_x, -2*holder_wall, -mud_strut_front_off_z])
+  translate_result_base()
+    translate([-mud_strut_front_off_x, -2*holder_wall, -mud_strut_front_off_z])
         children();
 }
 
