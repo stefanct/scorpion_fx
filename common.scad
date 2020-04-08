@@ -264,7 +264,9 @@ module wheel () {
 module mud_guard () {
   strut_rotation() {
     color("dimgrey", alpha=alpha) mud_strut();
-    color("silver", alpha=alpha) mud_screws();
+    if (is_undef(no_screws) || no_screws != 1) {
+      color("silver", alpha=alpha) mud_screws();
+    }
   }
   color("grey", alpha=alpha) mud_guard_wing();
 }
