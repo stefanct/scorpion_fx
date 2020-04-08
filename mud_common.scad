@@ -1,6 +1,7 @@
 // overridable global functions/variables
 function is_holder_front_facing() = 0;
 
+mud_screw_head_h_extra=5; // Make sunk screws in bracket (if mud_strut_rotation_edge is >~3°)
 function mud_screw_off_y()=2*holder_wall-mud_strut_thick;
 function holder_rect_height()=holder_rect_width;
 function holder_bracket_off_r()=0;

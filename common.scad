@@ -4,6 +4,7 @@
 function mud_screw_off_y()=0; // Additional offset of the mud screws towards the center
 fill_screw_holes=1; // Without this there is a 0.25mm gap between the screws and respective holes in this model
 mud_strut_extra_thick=0; // This allows the strut to intersect with the wing to prevent errors where the wing is already bending
+mud_screw_head_h_extra=0;
 
 module translate_bike() {
   children();
@@ -202,9 +203,9 @@ module mud_screw (off_x=0, off_y=0, off_z=0) {
   h=mud_screw_shaft_len;
   d_hole=mud_screw_shaft_d;
   d_head=mud_screw_head_d;
-  translate([off_x, +mud_strut_thick+mud_screw_head_h+off_y, off_z]) // Head
+  translate([off_x, +mud_strut_thick+mud_screw_head_h+mud_screw_head_h_extra+off_y, off_z]) // Head
     rotate([90,0,0])
-      cylinder(h=mud_screw_head_h, d=d_head); // actually rounded heads but this is good enough
+      cylinder(h=mud_screw_head_h+mud_screw_head_h_extra, d=d_head); // actually rounded heads but this is good enough
 
   translate([off_x, +mud_strut_thick+off_y, off_z]) { // Shaft
     rotate([90,0,0])
