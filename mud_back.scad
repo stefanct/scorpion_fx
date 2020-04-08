@@ -19,8 +19,9 @@ function is_holder_front_facing()=0;
 
 module translate_result() {
   rotate([-90,0,holder_arc_angle()])
-    translate([0, -2*holder_wall, 0])
-      children();
+    strut_rotation(1)
+      translate([0, -2*holder_wall, 0])
+        children();
 }
 
 module translate_bike() {

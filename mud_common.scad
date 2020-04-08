@@ -95,7 +95,8 @@ module holder () {
   difference () {
     union() {
       hull() {
-        holder_bracket();
+        strut_rotation()
+          holder_bracket();
         holder_arc();
       }
       hull() {
@@ -126,7 +127,7 @@ module high_infill () {
   intersection() {
     norm_infill();
     translate_result() {
-      rotate([0, mud_strut_rotation, 0])
+      rotate([0, mud_strut_rotation_y, 0])
         high_infill_screws();
     }
   }

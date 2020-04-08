@@ -7,8 +7,8 @@
 
 include <common.scad>;
 
-holder_arc_angle_quirk=0.75;
-holder_arc_off_x=mud_strut_front_off_x-mud_axle_x+(mud_strut_front_corner_dist+mud_strut_front_hole_dist)/2;
+holder_arc_angle_quirk=1;
+holder_arc_off_x=mud_strut_front_off_x-mud_axle_x+mud_strut_front_corner_dist/2;
 holder_arc_off_z=mud_strut_front_off_z+mud_axle_z;
 function holder_arc_angle() = 180-atan(((holder_arc_off_z/holder_arc_off_x)))+holder_arc_angle_quirk;
 
@@ -19,8 +19,9 @@ function is_holder_front_facing()=1;
 
 module translate_result() {
   rotate([-90,0,holder_arc_angle()])
-    translate([-mud_strut_front_off_x, -2*holder_wall, -mud_strut_front_off_z])
-      children();
+    strut_rotation(1)
+      translate([-mud_strut_front_off_x, -2*holder_wall, -mud_strut_front_off_z])
+        children();
 }
 
 module translate_bike() {

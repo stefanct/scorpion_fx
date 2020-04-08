@@ -36,7 +36,8 @@ mud_axle_x = 195;
 mud_axle_z = 150;
 
 // mud strut
-mud_strut_rotation=2.5; // Rotation around y
+mud_strut_rotation_edge=2; // Rotation around the upper edge-ish
+mud_strut_rotation_y=2.5; // Rotation around y
 mud_strut_thick=5;
 mud_strut_hole_d=5.5;
 mud_strut_corner_r=6;
@@ -136,7 +137,20 @@ module mud_strut_holes (d=mud_strut_hole_d, h_add=0) {
       cylinder(h=h, d=d);
 }
 
+// The strut is somewhat inclined away from the center and slightly twisted.
 // The code below tries to mimic the former by rotating -mud_strut_rotation_edge °
+// around the axis from mud_strut_upper_edge_p0 and mud_strut_upper_edge_p2.
+module strut_rotation(dir=-1) {
+  pt_a=[mud_strut_upper_edge_p0[0], 0, -mud_strut_upper_edge_p0[1]];
+  pt_b=[mud_strut_upper_edge_p2[0], 0, -mud_strut_upper_edge_p2[1]];
+  pt=(pt_b+pt_a)/2;
+  ax_tmp=pt_a-pt_b;
+  ax=[ax_tmp[0], ax_tmp[1], ax_tmp[2]];
+  rotate_about_pt(dir*mud_strut_rotation_edge, ax, pt)
+    rotate([0, mud_strut_rotation_y, 0])
+      children();
+}
+
 module mud_strut () {
   translate([0, -mud_strut_extra_thick, 0]) { // Make the strut intersect with the wing to prevent errors where the wing is already bending
     difference() {
@@ -248,7 +262,7 @@ module wheel () {
 }
 
 module mud_guard () {
-  rotate([0, mud_strut_rotation, 0]) {
+  strut_rotation() {
     color("dimgrey", alpha=alpha) mud_strut();
     color("silver", alpha=alpha) mud_screws();
   }
