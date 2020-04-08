@@ -34,14 +34,15 @@ module holder_rotation(orbit) {
 }
 
 module holder_arc () {
+  arc_extent_angle=180;
   holder_rotation(mud_axle_r-mud_d/2)
     intersection() { // Prevent bleeding on the outer side
       translate([0, -mud_d/2+holder_arc_width/2,0])
         cube([mud_d+holder_arc_width, mud_d+holder_arc_width,holder_arc_width],true);
 
       translate([0, -mud_d/2, -holder_arc_width/2]) // Move arc to correct y location and z-center on origin
-        rotate([0,0,90,]) // Fix coordinate system
-            rotate_extrude(angle = 180, convexity = 10) // Create 180° arc
+        rotate([0,0,270-arc_extent_angle,]) // Fix coordinate system
+            rotate_extrude(angle = arc_extent_angle, convexity = 10) // Create arc_extent_angle° arc
               translate([mud_d/2, holder_arc_width/2, 0]) // Move half-circle to arc's "orbit"
                 union() {
                   intersection() { // Create half-circle
