@@ -115,7 +115,27 @@ module high_infill_screws (off=0) {
   mud_strut_holes(d=4*mud_strut_hole_d, h_add=mud_screw_off_y());
 }
 
+module translate_result_base() {
+  if (outer_is_base) {
+    translate([0, 0, holder_beam_h])
+      rotate([+90,0,holder_arc_angle()])
+        children();
+  } else {
+    rotate([-90,0,holder_arc_angle()])
+      strut_rotation(1)
+        children();
+  }
+}
 
+module translate_result() {
+  translate_result_base()
+    translate([result_x_off, -2*holder_wall, result_z_off])
+        children();
+}
+
+module translate_bike() {
+  translate_result() children();
+}
 
 module norm_infill () {
   difference() {
