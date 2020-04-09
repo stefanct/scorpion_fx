@@ -1,5 +1,6 @@
 // overridable global functions/variables
 function is_holder_front_facing() = 0;
+function is_high_infill_only()=0;
 
 mud_screw_head_h_extra=5; // Make sunk screws in bracket (if mud_strut_rotation_edge is >~3°)
 function mud_screw_off_y()=2*holder_wall-mud_strut_thick;
@@ -116,7 +117,7 @@ module high_infill_screws (off=0) {
 }
 
 module translate_result_base() {
-  if (outer_is_base) {
+  if (outer_is_base && !is_high_infill_only()) {
     translate([0, 0, holder_beam_h])
       rotate([+90,0,holder_arc_angle()])
         children();

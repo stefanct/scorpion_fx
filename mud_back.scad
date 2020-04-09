@@ -21,4 +21,5 @@ include <mud_common.scad>;
 
 function holder_bracket_off_r()=10;
 function is_holder_front_facing()=0;
+// function is_high_infill_only()=1;
 
