@@ -118,7 +118,7 @@ module holder () {
 }
 
 module high_infill_screws (off=0) {
-  mud_strut_holes(d=4*mud_strut_hole_d, h_add=mud_screw_off_y());
+  mud_strut_holes(d=3*mud_strut_hole_d, h_add=mud_screw_off_y());
 }
 
 module translate_result_base() {
@@ -157,6 +157,12 @@ module high_infill () {
     translate_result() {
       rotate([0, mud_strut_rotation_y, 0])
         high_infill_screws();
-    }
+        hull() {
+          strut_rotation()
+            holder_bracket();
+          holder_arc(90, -90);
+          holder_beam(holder_beam_h/16, holder_beam_d*3/4);
+        }
+      }
   }
 }
