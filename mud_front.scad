@@ -18,6 +18,7 @@ result_x_off=-mud_strut_front_off_x;
 result_z_off=-mud_strut_front_off_z;
 
 include <mud_common.scad>;
+holder_neck_len = 3;
 
 function holder_bracket_off_r()=5;
 function is_holder_front_facing()=1;

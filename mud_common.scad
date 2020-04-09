@@ -2,6 +2,7 @@
 function is_holder_front_facing() = 0;
 function is_high_infill_only()=0;
 
+holder_neck_len = 0; // Move beam away from axle
 mud_screw_head_h_extra=5; // Make sunk screws in bracket (if mud_strut_rotation_edge is >~3°)
 function mud_screw_off_y()=2*holder_wall-mud_strut_thick;
 function holder_rect_height()=holder_rect_width;
@@ -35,15 +36,19 @@ module holder_rotation(orbit) {
         children();
 }
 
-module holder_arc () {
-  arc_extent_angle=180;
+/* Create the arc around the wing.
+
+ arc_extent_angle: number of degrees of the arc
+ arc_extent_angle_off: number of degrees the arc is rotate away from the outer side
+*/
+module holder_arc (arc_extent_angle=180, arc_extent_angle_off=0) {
   holder_rotation(mud_axle_r-mud_d/2)
     intersection() { // Prevent bleeding on the outer side
       translate([0, -mud_d/2+holder_arc_width/2,0])
         cube([mud_d+holder_arc_width, mud_d+holder_arc_width,holder_arc_width],true);
 
       translate([0, -mud_d/2, -holder_arc_width/2]) // Move arc to correct y location and z-center on origin
-        rotate([0,0,270-arc_extent_angle,]) // Fix coordinate system
+        rotate([0,0,270-arc_extent_angle+arc_extent_angle_off,]) // Fix coordinate system
             rotate_extrude(angle = arc_extent_angle, convexity = 10) // Create arc_extent_angle° arc
               translate([mud_d/2, holder_arc_width/2, 0]) // Move half-circle to arc's "orbit"
                 union() {
@@ -76,7 +81,7 @@ module tie_channel (h=tie_h, w=tie_w, off_h=0) {
 }
 
 module holder_beam_translation() {
-  holder_rotation(mud_axle_r+holder_beam_d/2+holder_wall)
+  holder_rotation(mud_axle_r+holder_beam_d/2+holder_wall+holder_neck_len)
     translate([0, -holder_beam_h/2+holder_beam_inwards_off, 0]) // Move to correct y location
       children();
 }
