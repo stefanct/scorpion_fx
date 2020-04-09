@@ -11,9 +11,10 @@ function holder_bracket_off_r()=0;
 ////////////////////////////////////////////////////////////////////////
 // Holder common
 holder_wall = 4;
+// Tie tunnels
 tie_w_center=8;
 tie_w=4;
-tie_h=2.5;
+tie_h=3;
 tie_gap=15;
 
 // Holder beam
