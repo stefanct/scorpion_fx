@@ -5,6 +5,7 @@ function mud_screw_off_y()=0; // Additional offset of the mud screws towards the
 fill_screw_holes=1; // Without this there is a 0.25mm gap between the screws and respective holes in this model
 mud_strut_extra_thick=0; // This allows the strut to intersect with the wing to prevent errors where the wing is already bending
 mud_screw_head_h_extra=0;
+function beam_bottle_screw_shaft_h_extra()=0; // Allow for customization of the length of the bottle screws on the derailleur beam
 
 module translate_bike() {
   children();
@@ -76,6 +77,16 @@ beam_tread_ext_h=310; // (customizable)
 beam_derailleur_d=29;
 beam_derailleur_h=180;
 beam_derailleur_angle=65; // vs. tread beam
+beam_bottle_screw_shaft_d=mud_screw_shaft_d;
+beam_bottle_screw_hole_d=mud_strut_hole_d;
+beam_bottle_screw_shaft_h=9; // This does not really matter in reality since the beam is hollow
+beam_bottle_screw_head_d=mud_screw_head_d;
+beam_bottle_screw_head_h=mud_screw_head_h;
+beam_bottle_screw_weld_h=3;
+beam_bottle_screw_weld_d=13;
+bottle_dist=2.5*25.4; // Distance between bottle holder screws is 2.5"
+bottle_dist_top=63; // Distance from the top of the derailleur beam
+
 // Crankset axle
 crankset_d=44;
 crankset_h=70;
@@ -103,6 +114,29 @@ module beams () {
     // Wheel beam left
     translate([ beam_wheels_offset_z, 0, beam_tread_h-beam_wheels_offset_x,]) rotate([-beam_wheels_angle_z, -beam_wheels_angle_x, 0]) cylinder(d=beam_wheels_d, h=beam_wheels_h);
   }
+
+  beam_derailleur_screw_translation_bottom()
+    beam_derailleur_screw();
+  beam_derailleur_screw_translation_top()
+    beam_derailleur_screw();
+}
+
+module beam_derailleur_screw_translation_top() {
+  beam_derailleur_screw_translation()
+    children();
+}
+
+module beam_derailleur_screw_translation_bottom() {
+  beam_derailleur_screw_translation(top_off=bottle_dist)
+    children();
+}
+
+module beam_derailleur_screw_translation(top_off=0) {
+  rotate([0, 90-beam_angle, 0])
+    translate([ 0, 0, beam_tread_h+beam_tread_ext_h])
+      rotate([0,90+beam_derailleur_angle,0])
+        translate([ beam_derailleur_h-bottle_dist_top-top_off, 0, -beam_derailleur_d/2])
+          children();
 }
 
 // Upper edge of the strut is a bezier curve
@@ -199,22 +233,39 @@ module mud_strut () {
   }
 }
 
+module beam_derailleur_screw (off_x=0, off_y=0, off_z=0) {
+  h=beam_bottle_screw_shaft_h;
+  d_shaft=beam_bottle_screw_shaft_d;
+  d_hole=beam_bottle_screw_hole_d;
+  d_head=beam_bottle_screw_head_d;
+  translate([off_x, off_y, -beam_bottle_screw_weld_h-beam_bottle_screw_head_h-beam_bottle_screw_shaft_h_extra()-off_z]) // Head
+    cylinder(h=beam_bottle_screw_head_h, d=d_head);
+
+  translate([off_x, off_y, -beam_bottle_screw_weld_h-beam_bottle_screw_shaft_h_extra()-off_z]) // Shaft/Hole
+    cylinder(h=h+beam_bottle_screw_shaft_h_extra()+off_z, d=(fill_screw_holes==1) ? d_hole : d_shaft);
+
+  sunken_weld_extra=3;
+  translate([off_x, off_y, -beam_bottle_screw_weld_h-off_z]) // Shaft/Hole
+    cylinder(h=beam_bottle_screw_weld_h+sunken_weld_extra+off_z, d=beam_bottle_screw_weld_d);
+}
+
 module mud_screw (off_x=0, off_y=0, off_z=0) {
   h=mud_screw_shaft_len;
-  d_hole=mud_screw_shaft_d;
   d_head=mud_screw_head_d;
+  d_shaft=mud_screw_shaft_d;
+  d_hole=mud_strut_hole_d;
   translate([off_x, +mud_strut_thick+mud_screw_head_h+mud_screw_head_h_extra+off_y, off_z]) // Head
     rotate([90,0,0])
       cylinder(h=mud_screw_head_h+mud_screw_head_h_extra, d=d_head); // actually rounded heads but this is good enough
 
   translate([off_x, +mud_strut_thick+off_y, off_z]) { // Shaft
     rotate([90,0,0])
-      cylinder(h=h+off_y, d=d_hole);
+      cylinder(h=h+off_y, d=d_shaft);
   }
   if (fill_screw_holes==1) {
     translate([off_x, mud_strut_thick, off_z]) { // Hole
       rotate([90,0,0])
-        cylinder(h=mud_strut_thick+mud_strut_extra_thick, d=mud_strut_hole_d);
+        cylinder(h=mud_strut_thick+mud_strut_extra_thick, d=d_hole);
     }
   }
 }
